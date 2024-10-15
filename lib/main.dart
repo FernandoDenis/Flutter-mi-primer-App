@@ -25,7 +25,6 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
       ),
       home: const MyHomePage(title: 'Lista de alumnos'),
-      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -52,34 +51,94 @@ class _MyHomePageState extends State<MyHomePage> {
     Persona("Sofía", "Díaz", 20104321),
   ];
 
-  void _agregarPersona() {
-    setState(() {
-      _personas.add(Persona("Nuevo", "Apellido", 999));
-    });
+  final TextEditingController _nombreController = TextEditingController();
+  final TextEditingController _apellidoController = TextEditingController();
+  final TextEditingController _cuentaController = TextEditingController();
+
+  // Método para mostrar el formulario de agregar persona
+  void _mostrarFormularioAgregarPersona() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Agregar persona'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: _nombreController,
+                decoration: const InputDecoration(labelText: 'Nombre'),
+              ),
+              TextField(
+                controller: _apellidoController,
+                decoration: const InputDecoration(labelText: 'Apellido'),
+              ),
+              TextField(
+                controller: _cuentaController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Cuenta'),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Cerrar el diálogo
+              },
+            ),
+            TextButton(
+              child: const Text('Agregar'),
+              onPressed: () {
+                _agregarPersona();
+                Navigator.of(context).pop(); // Cerrar el diálogo
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
+  // Método para agregar una persona a la lista con los datos del formulario
+  void _agregarPersona() {
+    final String nombre = _nombreController.text;
+    final String apellido = _apellidoController.text;
+    final int? cuenta = int.tryParse(_cuentaController.text);
+
+    if (nombre.isNotEmpty && apellido.isNotEmpty && cuenta != null) {
+      setState(() {
+        _personas.add(Persona(nombre, apellido, cuenta));
+      });
+      _nombreController.clear();
+      _apellidoController.clear();
+      _cuentaController.clear();
+    }
+  }
+
+  // Método para mostrar el diálogo de confirmación de eliminación
   void _eliminarPersona(int index) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        final persona = _personas[index];
         return AlertDialog(
-          title: const Text("Eliminar persona"),
-          content: Text("¿Estás seguro de eliminar a: ${persona.nombre}?"),
+          title: const Text('Eliminar persona'),
+          content:
+              Text('¿Estás seguro de eliminar a: ${_personas[index].nombre}?'),
           actions: <Widget>[
             TextButton(
-              child: const Text("Cancelar"),
+              child: const Text('Cancelar'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Cerrar el diálogo
               },
             ),
             TextButton(
-              child: const Text("Borrar", style: TextStyle(color: Colors.red)),
+              child: const Text('Borrar', style: TextStyle(color: Colors.red)),
               onPressed: () {
                 setState(() {
-                  _personas.removeAt(index);
+                  _personas.removeAt(index); // Eliminar la persona de la lista
                 });
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Cerrar el diálogo
               },
             ),
           ],
@@ -111,13 +170,16 @@ class _MyHomePageState extends State<MyHomePage> {
             subtitle: Text('${persona.cuenta}'),
             trailing: IconButton(
               icon: const Icon(Icons.chevron_right),
-              onPressed: () => _eliminarPersona(index),
+              onPressed: () {
+                _eliminarPersona(
+                    index); // Mostrar diálogo para eliminar persona
+              },
             ),
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _agregarPersona,
+        onPressed: _mostrarFormularioAgregarPersona,
         backgroundColor: Colors.green,
         tooltip: 'Agregar Persona',
         child: const Icon(Icons.person_add),
